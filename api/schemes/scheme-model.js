@@ -4,7 +4,7 @@
  */
 
 
-const knex = require("../../data/db-config")
+const db = require("../../data/db-config")
 
 function find() { // Egzersiz A
   /*
@@ -23,10 +23,10 @@ function find() { // Egzersiz A
       
 
     2A- Sorguyu kavradığınızda devam edin ve onu Knex'te oluşturun.
-    Bu işlevden elde edilen veri kümesini döndürün.
+    Bu  döndürün.işlevden elde edilen veri kümesini
   */
 
-    const allDatas = knex("scheme as sc")
+    const allDatas =db ("scheme as sc")
                     .leftJoin("steps as st","sc.scheme_id","st.scheme_id")
                     .select("sc.*")
                     .count("st.step_id as number_of_steps")
@@ -51,7 +51,7 @@ async function  findById(scheme_id) { // Egzersiz B
     2B- Sorguyu kavradığınızda devam edin ve onu Knex'te oluşturun
     parametrik yapma: `1` hazır değeri yerine `scheme_id` kullanmalısınız.
     */
-    const filteredData = await knex("schemes as sc")
+    const filteredData = await db("schemes as sc")
                          .leftJoin("steps as st", "sc.sheme_id" , "st.scheme_id")
                          .select("sc.scheme_name", "st.*")
                          .where("sc.scheme_id", scheme_id)
@@ -120,7 +120,7 @@ async function  findById(scheme_id) { // Egzersiz B
         scheme_name :filteredData[0].scheme_name ,
         steps : []
       }
-      if(filteredData[0].step_id == null){
+      if(filteredData[0].step_id ){
         return responseData;
       }
       for(let i = 0; i < filteredData.length; i++){
@@ -157,21 +157,22 @@ function findSteps(scheme_id) { // Egzersiz C
       ]
   */
 
-      const steps = knex("steps as st")
+      const steps = db("steps as st")
                     .leftJoin("schemes as sc","st.scheme_id","sc.scheme_id")
                     .select("st.step_id" , "st.step_number", "st.instuctions" , "sc.scheme_name")
-                    .where("sc.scheme_id" , scheme_id);
+                    .where("sc.scheme_id" , scheme_id)
+                    .orderBy("st.step_number", "asc");
         return steps;
 }
 
-function add(scheme) { // Egzersiz D
+async function add(scheme) { // Egzersiz D
   /*
     1D- Bu işlev yeni bir şema oluşturur ve _yeni oluşturulan şemaya çözümlenir.
 
 
   */
 
-    let {scheme_id} = knex("scheme").insert(scheme);
+    let {scheme_id} = await db("scheme").insert(scheme);
     return findById(scheme_id);
 }
 
@@ -181,8 +182,9 @@ async  function addStep(scheme_id, step) { // EXERCISE E
     ve verilen "scheme_id"ye ait _tüm adımları_ çözer,
     yeni oluşturulan dahil.
   */
- await knex("steps").insert(step);
- return findSteps(step);
+ step.scheme_id=scheme_id
+  await db("steps").insert(step);
+ return findSteps(scheme_id);
 }
 
 module.exports = {

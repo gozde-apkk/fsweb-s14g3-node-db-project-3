@@ -6,8 +6,22 @@
     "message": "scheme_id <gerçek id> id li şema bulunamadı"
   }
 */
-const checkSchemeId = (req, res, next) => {
 
+const schemeModel = require("./scheme-model");
+
+
+const checkSchemeId = async (req, res, next) => {
+        try{
+          let isExist = await schemeModel.findById(req.params.scheme_id);
+          if(!isExist){
+            res.status(404).json({message:`scheme_id ${req.params.scheme_id} id li kullanıcı bulumadı`})
+          }else {
+            req.existScheme = isExist;
+            next();
+          }
+        }catch(error){
+          next(error);
+        }
 }
 
 /*
@@ -17,9 +31,18 @@ const checkSchemeId = (req, res, next) => {
   {
     "message": "Geçersiz scheme_name"
   }
-*/
+*///PAYLOAD CONTROL
 const validateScheme = (req, res, next) => {
-
+      try{
+        let {scheme_name} = req.body;
+        if(!scheme_name || typeof scheme_name !=="string"){
+          res.status(400).json({message:"Geçersiz scheme_name"})
+        }else{
+          next();
+        }
+      }catch(error){
+        next(error);
+      }
 }
 
 /*
@@ -30,9 +53,19 @@ const validateScheme = (req, res, next) => {
   {
     "message": "Hatalı step"
   }
+
 */
 const validateStep = (req, res, next) => {
-
+          try{
+            let{instructions , step_number} = req.params;
+            if(!instructions || !step_number == undefined  || typeof step_number !=="number" || step_number <1){
+              res.status(400).json({message:"Hatalı step_number"})
+            }else{
+              next();
+            }
+          }catch(error){
+            next(error)
+          }
 }
 
 module.exports = {
